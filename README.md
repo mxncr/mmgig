@@ -37,7 +37,7 @@ are set to the right locations.
 Now you should:
 - configure and build Graphite (which will build this plugin)
 - launch Graphite, go to *Files > Preferences > Plugins*, enter *mmgig* and click *Add*, then *Save configuration file*
-- restart Graphite, from now on you should have the *femb* plugin working (right click on a mesh in Scene and check if the MmgTools command menu is present)
+- restart Graphite, from now on you should have the *mmgig* plugin working (right click on a mesh in Scene and check if the MmgTools command menu is present)
 
 ### Details 
 

@@ -296,4 +296,96 @@ namespace OGF {
         mmg3d_free(mesh, met);
         return ok;
     }
+
+    bool mmg3d_extract_iso(const Mesh& M, Mesh& M_out, const MmgOptions& opt) {
+        if (!opt.level_set || opt.ls_attribute == "no_ls" || !M.vertices.attributes().is_defined(opt.ls_attribute)) {
+            Logger::err("mmg3D_iso") << opt.ls_attribute << " is not a vertex attribute, cancel" << std::endl;
+            return false;
+        }
+        if (opt.angle_detection) {
+            Logger::warn("mmg3D_iso") << "angle_detection shoud probably be disabled because level set functions are smooth" << std::endl;
+        }
+
+        MMG5_pMesh mesh = NULL;
+        MMG5_pSol met = NULL;
+        bool ok = geo_to_mmg(M, mesh, met, true);
+        if (!ok) {
+            Logger::err("mmg3d_remesh") << "failed to convert mesh to MMG5_pMesh" << std::endl;
+            mmg3d_free(mesh, met);
+            return false;
+        }
+        GEO::Attribute<double> ls(M.vertices.attributes(), opt.ls_attribute);
+        for(uint v = 0; v < M.vertices.nb(); ++v) {
+            met->m[v+1] = ls[v];
+        }
+
+        /* Flag border for future deletion */
+        // std::vector<bool> on_border(M.vertices.nb(), false);
+        // for (index_t t = 0; t < M.cells.nb(); ++t) {
+        //     for (index_t lf = 0; lf < M.cells.nb_facets(t); ++lf) {
+        //         if (M.cells.adjacent(t,lf) != GEO::NO_CELL) continue;
+        //         for (index_t lv = 0; lv < M.cells.facet_nb_vertices(t,lf); ++lv) {
+        //             on_border[M.cells.facet_vertex(t,lf,lv)] = true;
+        //         }
+        //     }
+        // }
+
+        /* Set remeshing options */
+        MMG3D_Set_iparameter(mesh, met, MMG3D_IPARAM_iso, 1);
+        MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_ls, opt.ls_value);
+        MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_angleDetection, opt.angle_value);
+        if (opt.hsiz == 0.) {
+            MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_hmin, opt.hmin);
+            MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_hmax, opt.hmax);
+        } else {
+            Logger::err("mmg3d_iso") << "should not use hsiz parameter for level set mode" << std::endl;
+            mmg3d_free(mesh, met);
+            return false;
+        }
+        MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_hausd, opt.hausd);
+        MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_hgrad, opt.hgrad);
+        MMG3D_Set_iparameter(mesh, met, MMG3D_IPARAM_angle, int(opt.angle_detection));
+        MMG3D_Set_iparameter(mesh, met, MMG3D_IPARAM_noswap, int(opt.noswap));
+        MMG3D_Set_iparameter(mesh, met, MMG3D_IPARAM_noinsert, 1);
+        MMG3D_Set_iparameter(mesh, met, MMG3D_IPARAM_nomove, 1);
+        MMG3D_Set_iparameter(mesh, met, MMG3D_IPARAM_nosurf, 1);
+
+        int ier = MMG3D_mmg3dls(mesh,met);
+        if (ier != MMG5_SUCCESS) {
+            Logger::err("mmg3d_iso") << "failed to remesh isovalue" << std::endl;
+            mmg3d_free(mesh, met);
+            return false;
+        }
+
+        /* Convert back */
+        ok = mmg_to_geo(mesh, M_out);
+        GEO::Attribute<double> ls_out(M_out.vertices.attributes(), opt.ls_attribute);
+        for(uint v = 0; v < M_out.vertices.nb(); ++v) {
+            ls_out[v] = met->m[v+1];
+        }
+        /* Extract only the border */
+        // M_out.cells.clear(false,false);
+        // M_out.vertices.remove_isolated();
+        // GEO::vector<index_t> to_del(M_out.facets.nb(), 0);
+        // for (index_t f = 0; f < M_out.facets.nb(); ++f) {
+        //     double d = 0;
+        //     bool f_on_border = true;
+        //     for (index_t lv = 0; lv < M_out.facets.nb_vertices(f); ++lv) {
+        //         d = geo_max(d,std::abs(ls_out[M_out.facets.vertex(f,0)] - opt.ls_value));
+        //         if (M_out.facets.vertex(f,lv) < M.vertices.nb()) {
+        //             if (!on_border[M_out.facets.vertex(f,lv)]) f_on_border = false;
+        //         } else {
+        //             f_on_border = false;
+        //         }
+        //     }
+        //     // if (d > 1.1 * opt.hmin) {
+        //     //     to_del[f] = 1;
+        //     // }
+        //     if (f_on_border) to_del[f] = 1;
+        // }
+        // M_out.facets.delete_elements(to_del, true);
+
+        mmg3d_free(mesh, met);
+        return ok;
+    }
 }

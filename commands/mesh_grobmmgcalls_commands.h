@@ -99,6 +99,19 @@ gom_slots:
                     bool nomove = false,
                     bool nosurf = false,
                     const std::string& metric_attribute = "no_metric");
+            /**
+             * \menu /MmgTools
+             */
+            void mmg3d_iso_extraction(
+                    const std::string& output_name = "default_iso",
+                    const std::string& level_set_attribute = "no_ls",
+                    double level_set_value = 0.,
+                    bool angle_detection = false,
+                    double angle_value = 45.,
+                    double hausd_bbox = 0.001,
+                    double hmin_bbox = 0.01,
+                    double hmax_bbox = 0.2,
+                    double hgrad = 1.4);
     } ;
 }
 

@@ -173,5 +173,44 @@ namespace OGF {
         }
         return;
     }
-
+ 
+    void MeshGrobmmgcallsCommands::mmg3d_iso_extraction(
+            const std::string& output_name,
+            const std::string& ls_attribute,
+            double ls_value,
+            bool angle_detection,
+            double angle_value,
+            double hausd_bbox,
+            double hmin_bbox,
+            double hmax_bbox,
+            double hgrad) {
+        if (mesh_grob()->cells.nb() == 0 || !mesh_grob()->cells.are_simplices()) {
+            Logger::err("mmg3d_remesh") << "input mesh should be a tetrahedral mesh, cancel" << std::endl;
+            return;
+        }
+        std::string name = output_name;
+        if (output_name == "default_mmg3d") {
+            name = mesh_grob()->name() + "_mmg3d";
+        }
+        double xyzmin[3];
+        double xyzmax[3];
+        GEO::get_bbox(*mesh_grob(), xyzmin, xyzmax);
+        MmgOptions opt;
+        opt.angle_detection   = angle_detection;
+        opt.angle_value       = angle_value;
+        opt.hausd             = scale_to_bbox(hausd_bbox, xyzmin, xyzmax);
+        opt.hmin              = scale_to_bbox(hmin_bbox , xyzmin, xyzmax);
+        opt.hmax              = scale_to_bbox(hmax_bbox , xyzmin, xyzmax);
+        opt.hgrad             = hgrad;
+        opt.level_set         = true;
+        opt.ls_value          = ls_value;
+        opt.ls_attribute      = ls_attribute;
+        MeshGrob* Mo = MeshGrob::find_or_create(scene_graph(), name);
+        if (mmg3d_extract_iso(*mesh_grob(), *Mo, opt)) {
+            Mo->update();
+        } else {
+            Mo->clear();
+        }
+        return;
+    } 
 }

@@ -56,6 +56,7 @@ namespace OGF {
      *  https://www.mmgtools.org/mmg-remesher-try-mmg/mmg-remesher-options
      */
     struct MmgOptions {
+        /* Remeshing */
         bool angle_detection = true;
         double angle_value = 45.;
         double hausd = 0.01;
@@ -72,10 +73,15 @@ namespace OGF {
         bool nomove = false;
         bool nosurf = false;
         std::string metric_attribute = "no_metric";
+        /* Level set extraction */
+        bool level_set = false;
+        std::string ls_attribute = "no_ls";
+        double ls_value = 0.;
     };
 
     bool mmgs_tri_remesh(const Mesh& M, Mesh& M_out, const MmgOptions& opt);
     bool mmg3d_tet_remesh(const Mesh& M, Mesh& M_out, const MmgOptions& opt);
+    bool mmg3d_extract_iso(const Mesh& M, Mesh& M_out, const MmgOptions& opt);
         
 }
 

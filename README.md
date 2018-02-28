@@ -47,6 +47,20 @@ functions are called and the result is converted back into a `GEO::Mesh`.
 If the `GEO::Mesh` contains a vertex attribute (a `double` at each vertex), this field can
 be used to prescribe the mesh size locally for *mmg* algorithms.
 
+Available wrappers exposed in `algo/mmg_wrapper.h` and in the `MmgTools` menu:
+
+- `mmgs_tri_remesh(..)` is a wrapper over `MMGS_mmgslib(..)`
+- `mmg3d_tet_remesh(..)` is a wrapper over `MMG3D_mmg3dlib(..)`
+- `mmg3d_extract_iso(..)` is a wrapper over `MMG3D_mmg3dls(..)`
+
 ### Screenshot
 
+Tetrahedral remeshing with prescribed cell size :
+
 [<img src="doc/cube_both.png">](docs/cube_both.png)
+
+### Todo / not supported
+
+- Wrapper for remeshing with anisotropic metric (one symmetric matrix per vertex)
+
+- Wrapper for 2D remeshing (*mmg2d*)

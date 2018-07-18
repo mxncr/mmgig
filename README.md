@@ -12,7 +12,7 @@ for more details on the options.
 
 First, you need to clone and build *MmgTools* with the BUILD_SHARED_LIBS option ON
 
-    https://github.com/MmgTools/mmg.git /path/to/mmg
+    git clone https://github.com/MmgTools/mmg.git /path/to/mmg
     cd /path/to/mmg
     mkdir build
     cd build

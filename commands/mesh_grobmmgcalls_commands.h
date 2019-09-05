@@ -76,7 +76,9 @@ gom_slots:
                     bool noinsert = false,
                     bool noswap = false,
                     bool nomove = false,
-                    const std::string& metric_attribute = "no_metric");
+                    const std::string& metric_attribute = "no_metric",
+                    const std::string & edge_attribute = "no_attribute",
+                    const std::string & facet_attribute = "no_attribute");
 
             /**
              * \menu /MmgTools
@@ -98,7 +100,10 @@ gom_slots:
                     bool noswap = false,
                     bool nomove = false,
                     bool nosurf = false,
-                    const std::string& metric_attribute = "no_metric");
+                    const std::string& metric_attribute = "no_metric",
+                    const std::string & edge_attribute = "no_attribute",
+                    const std::string & facet_attribute = "no_attribute",
+                    const std::string & cell_attribute = "no_attribute");
             /**
              * \menu /MmgTools
              */

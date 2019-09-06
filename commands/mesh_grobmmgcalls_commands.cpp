@@ -84,7 +84,9 @@ namespace OGF {
             bool noinsert,
             bool noswap,
             bool nomove,
-            const std::string& metric_attribute
+            const std::string& metric_attribute,
+            const std::string& edge_attribute,
+            const std::string& facet_attribute
             ) {
         if (mesh_grob()->cells.nb() > 0 || mesh_grob()->facets.nb() == 0 || !mesh_grob()->facets.are_simplices()) {
             Logger::err("mmgs_remesh") << "input mesh should be a closed triangulated mesh, cancel" << std::endl;
@@ -111,7 +113,7 @@ namespace OGF {
         opt.nomove            = nomove;
         opt.metric_attribute  = metric_attribute;
         MeshGrob* Mo = MeshGrob::find_or_create(scene_graph(), name);
-        if (mmgs_tri_remesh(*mesh_grob(), *Mo, opt)) {
+        if (mmgs_tri_remesh(*mesh_grob(), *Mo, opt, edge_attribute, facet_attribute)) {
             Mo->update();
         } else {
             Mo->clear();
@@ -136,7 +138,10 @@ namespace OGF {
             bool noswap,
             bool nomove,
             bool nosurf,
-            const std::string& metric_attribute) {
+            const std::string& metric_attribute,
+            const std::string& edge_attribute,
+            const std::string& facet_attribute,
+            const std::string& cell_attribute) {
         if (mesh_grob()->cells.nb() == 0 || !mesh_grob()->cells.are_simplices()) {
             Logger::err("mmg3d_remesh") << "input mesh should be a tetrahedral mesh, cancel" << std::endl;
             return;
@@ -166,7 +171,7 @@ namespace OGF {
         opt.nosurf            = nosurf;
         opt.metric_attribute  = metric_attribute;
         MeshGrob* Mo = MeshGrob::find_or_create(scene_graph(), name);
-        if (mmg3d_tet_remesh(*mesh_grob(), *Mo, opt)) {
+        if (mmg3d_tet_remesh(*mesh_grob(), *Mo, opt, edge_attribute, facet_attribute, cell_attribute)) {
             Mo->update();
         } else {
             Mo->clear();

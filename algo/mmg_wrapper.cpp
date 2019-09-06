@@ -52,7 +52,11 @@ extern "C" {
 namespace OGF {
     using namespace GEO;
 
-    bool mmg_to_geo(const MMG5_pMesh mmg, Mesh& M) {
+    bool mmg_to_geo(const MMG5_pMesh mmg,
+                     Mesh& M,
+                     const std::string & edge_attribute_name = "no_attribute",
+                     const std::string & facet_attribute_name = "no_attribute",
+                     const std::string & cell_attribute_name = "no_attribute") {
         printf("converting MMG5_pMesh to GEO::Mesh .. \n");
         /* Notes:
          * - indexing seems to start at 1 in MMG */
@@ -73,10 +77,22 @@ namespace OGF {
             M.edges.set_vertex(e,0,(uint) mmg->edge[e+1].a - 1);
             M.edges.set_vertex(e,1,(uint) mmg->edge[e+1].b - 1);
         }
+        if(edge_attribute_name != "no_attribute") {
+            Attribute< int > edge_attribute( M.edges.attributes(), edge_attribute_name);
+            for (uint e = 0; e < M.edges.nb(); ++e) {
+                edge_attribute[e] = mmg->edge[e+1].ref;
+            }
+        }
         for (uint t = 0; t < M.facets.nb(); ++t) {
             M.facets.set_vertex(t,0,(uint) mmg->tria[t+1].v[0] - 1);
             M.facets.set_vertex(t,1,(uint) mmg->tria[t+1].v[1] - 1);
             M.facets.set_vertex(t,2,(uint) mmg->tria[t+1].v[2] - 1);
+        }
+        if(facet_attribute_name != "no_attribute") {
+            Attribute< int > facet_attribute( M.facets.attributes(), facet_attribute_name);
+            for (uint t = 0; t < M.facets.nb(); ++t) {
+                facet_attribute[t] =  mmg->tria[t+1].ref;
+            }
         }
         for (uint c = 0; c < M.cells.nb(); ++c) {
             M.cells.set_vertex(c,0,(uint) mmg->tetra[c+1].v[0] - 1);
@@ -84,13 +100,24 @@ namespace OGF {
             M.cells.set_vertex(c,2,(uint) mmg->tetra[c+1].v[2] - 1);
             M.cells.set_vertex(c,3,(uint) mmg->tetra[c+1].v[3] - 1);
         }
+        if(cell_attribute_name != "no_attribute") {
+            Attribute< int > cell_attribute( M.cells.attributes(), cell_attribute_name);
+            for (uint c = 0; c < M.cells.nb(); ++c) {
+                cell_attribute[c] = mmg->tetra[c+1].ref;
+            }
+        }
         M.facets.connect();
         M.cells.connect();
 
         return true;
     }
 
-    bool geo_to_mmg(const Mesh& M, MMG5_pMesh& mmg, MMG5_pSol& sol, bool volume_mesh = true) {
+    bool geo_to_mmg(const Mesh& M, MMG5_pMesh& mmg,
+                    MMG5_pSol& sol,
+                    bool volume_mesh = true,
+                    const std::string & edge_attribute_name = "no_attribute",
+                    const std::string & facet_attribute_name = "no_attribute",
+                    const std::string & cell_attribute_name = "no_attribute") {
         printf("converting GEO::M to MMG5_pMesh .. \n");
         geo_assert(M.vertices.dimension() == 3);
         // if (M.facets.nb() > 0) geo_assert(M.facets.are_simplices());
@@ -132,10 +159,30 @@ namespace OGF {
             mmg->edge[e+1].a = (int) M.edges.vertex(e,0) + 1;
             mmg->edge[e+1].b = (int) M.edges.vertex(e,1) + 1;
         }
+        if(edge_attribute_name != "no_attribute") {
+            if (!M.edges.attributes().is_defined( edge_attribute_name)) {
+              printf("failed to find attribute named %s on edges", edge_attribute_name.c_str());
+              return false;
+            }
+            Attribute< int > edge_attribute( M.edges.attributes(), edge_attribute_name );
+            for (uint e = 0; e < (uint) mmg->na; ++e) {
+                mmg->edge[e+1].ref = edge_attribute[e];
+            }
+        }
         for (uint t = 0; t < (uint) mmg->nt; ++t) {
             mmg->tria[t+1].v[0] = (int) M.facets.vertex(t,0) + 1;
             mmg->tria[t+1].v[1] = (int) M.facets.vertex(t,1) + 1;
             mmg->tria[t+1].v[2] = (int) M.facets.vertex(t,2) + 1;
+        }
+        if(facet_attribute_name != "no_attribute") {
+            if (!M.facets.attributes().is_defined( facet_attribute_name)) {
+              printf("failed to find attribute named %s on facets", facet_attribute_name.c_str());
+              return false;
+            }
+            Attribute< int > facet_attribute( M.facets.attributes(), facet_attribute_name );
+            for (uint t = 0; t < (uint) mmg->nt; ++t) {
+                mmg->tria[t+1].ref = facet_attribute[t];
+            }
         }
         if (volume_mesh) {
             for (uint c = 0; c < (uint) mmg->ne; ++c) {
@@ -143,6 +190,16 @@ namespace OGF {
                 mmg->tetra[c+1].v[1] = (int) M.cells.vertex(c,1) + 1;
                 mmg->tetra[c+1].v[2] = (int) M.cells.vertex(c,2) + 1;
                 mmg->tetra[c+1].v[3] = (int) M.cells.vertex(c,3) + 1;
+            }
+            if(cell_attribute_name != "no_attribute") {
+                if(!M.cells.attributes().is_defined( cell_attribute_name )) {
+                    printf("failed to find attribute named %s on cells", cell_attribute_name.c_str());
+                    return false;
+                }
+                Attribute< int > cell_attribute(M.cells.attributes(), cell_attribute_name);
+                for (uint c = 0; c < (uint) mmg->ne; ++c) {
+                  mmg->tetra[c+1].ref = cell_attribute[c];
+                }
             }
         }
 
@@ -190,10 +247,14 @@ namespace OGF {
         return ok;
     }
 
-    bool mmgs_tri_remesh(const Mesh& M, Mesh& M_out, const MmgOptions& opt) {
+    bool mmgs_tri_remesh(const Mesh& M,
+                         Mesh& M_out,
+                         const MmgOptions& opt,
+                          const std::string& edge_attribute,
+                          const std::string& facet_attribute) {
         MMG5_pMesh mesh = NULL;
         MMG5_pSol met = NULL;
-        bool ok = geo_to_mmg(M, mesh, met, false);
+        bool ok = geo_to_mmg(M, mesh, met, false, edge_attribute, facet_attribute);
         if (!ok) {
             Logger::err("mmgs_remesh") << "failed to convert mesh to MMG5_pMesh" << std::endl;
             mmgs_free(mesh, met);
@@ -236,17 +297,22 @@ namespace OGF {
             return false;
         }
 
-        ok = mmg_to_geo(mesh, M_out);
+        ok = mmg_to_geo(mesh, M_out, edge_attribute, facet_attribute);
 
         mmgs_free(mesh, met);
         return ok;
     }
 
 
-    bool mmg3d_tet_remesh(const Mesh& M, Mesh& M_out, const MmgOptions& opt) {
+    bool mmg3d_tet_remesh(const Mesh& M,
+                          Mesh& M_out,
+                          const MmgOptions& opt,
+                          const std::string& edge_attribute,
+                          const std::string& facet_attribute,
+                          const std::string& cell_attribute) {
         MMG5_pMesh mesh = NULL;
         MMG5_pSol met = NULL;
-        bool ok = geo_to_mmg(M, mesh, met, true);
+        bool ok = geo_to_mmg(M, mesh, met, true, edge_attribute, facet_attribute, cell_attribute);
         if (!ok) {
             Logger::err("mmg3d_remesh") << "failed to convert mesh to MMG5_pMesh" << std::endl;
             mmg3d_free(mesh, met);
@@ -293,7 +359,7 @@ namespace OGF {
             return false;
         }
 
-        ok = mmg_to_geo(mesh, M_out);
+        ok = mmg_to_geo(mesh, M_out, edge_attribute, facet_attribute, cell_attribute);
 
         mmg3d_free(mesh, met);
         return ok;

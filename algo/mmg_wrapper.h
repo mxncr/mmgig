@@ -79,9 +79,20 @@ namespace OGF {
         double ls_value = 0.;
     };
 
-    bool mmgig_API mmgs_tri_remesh(const Mesh& M, Mesh& M_out, const MmgOptions& opt);
-    bool mmgig_API mmg3d_tet_remesh(const Mesh& M, Mesh& M_out, const MmgOptions& opt);
-    bool mmgig_API mmg3d_extract_iso(const Mesh& M, Mesh& M_out, const MmgOptions& opt);
+    bool mmgs_tri_remesh(const Mesh& M,
+                         Mesh& M_out,
+                         const MmgOptions& opt,
+                          const std::string& edge_attribute,
+                          const std::string& facet_attribute);
+
+    bool mmg3d_tet_remesh(const Mesh& M,
+                          Mesh& M_out,
+                          const MmgOptions& opt,
+                          const std::string& edge_attribute,
+                          const std::string& facet_attribute,
+                          const std::string& cell_attribute);
+
+    bool mmg3d_extract_iso(const Mesh& M, Mesh& M_out, const MmgOptions& opt);
         
 }
 

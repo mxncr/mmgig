@@ -249,12 +249,10 @@ namespace OGF {
 
     bool mmgs_tri_remesh(const Mesh& M,
                          Mesh& M_out,
-                         const MmgOptions& opt,
-                          const std::string& edge_attribute,
-                          const std::string& facet_attribute) {
+                         const MmgOptions& opt) {
         MMG5_pMesh mesh = NULL;
         MMG5_pSol met = NULL;
-        bool ok = geo_to_mmg(M, mesh, met, false, edge_attribute, facet_attribute);
+        bool ok = geo_to_mmg(M, mesh, met, false, opt.edge_attribute, opt.facet_attribute);
         if (!ok) {
             Logger::err("mmgs_remesh") << "failed to convert mesh to MMG5_pMesh" << std::endl;
             mmgs_free(mesh, met);
@@ -297,7 +295,7 @@ namespace OGF {
             return false;
         }
 
-        ok = mmg_to_geo(mesh, M_out, edge_attribute, facet_attribute);
+        ok = mmg_to_geo(mesh, M_out, opt.edge_attribute, opt.facet_attribute);
 
         mmgs_free(mesh, met);
         return ok;
@@ -306,13 +304,10 @@ namespace OGF {
 
     bool mmg3d_tet_remesh(const Mesh& M,
                           Mesh& M_out,
-                          const MmgOptions& opt,
-                          const std::string& edge_attribute,
-                          const std::string& facet_attribute,
-                          const std::string& cell_attribute) {
+                          const MmgOptions& opt) {
         MMG5_pMesh mesh = NULL;
         MMG5_pSol met = NULL;
-        bool ok = geo_to_mmg(M, mesh, met, true, edge_attribute, facet_attribute, cell_attribute);
+        bool ok = geo_to_mmg(M, mesh, met, true, opt.edge_attribute, opt.facet_attribute, opt.cell_attribute);
         if (!ok) {
             Logger::err("mmg3d_remesh") << "failed to convert mesh to MMG5_pMesh" << std::endl;
             mmg3d_free(mesh, met);
@@ -359,7 +354,7 @@ namespace OGF {
             return false;
         }
 
-        ok = mmg_to_geo(mesh, M_out, edge_attribute, facet_attribute, cell_attribute);
+        ok = mmg_to_geo(mesh, M_out, opt.edge_attribute, opt.facet_attribute, opt.cell_attribute);
 
         mmg3d_free(mesh, met);
         return ok;
@@ -376,7 +371,7 @@ namespace OGF {
 
         MMG5_pMesh mesh = NULL;
         MMG5_pSol met = NULL;
-        bool ok = geo_to_mmg(M, mesh, met, true);
+        bool ok = geo_to_mmg(M, mesh, met, true, opt.edge_attribute, opt.facet_attribute, opt.cell_attribute);
         if (!ok) {
             Logger::err("mmg3d_remesh") << "failed to convert mesh to MMG5_pMesh" << std::endl;
             mmg3d_free(mesh, met);
@@ -426,7 +421,7 @@ namespace OGF {
         }
 
         /* Convert back */
-        ok = mmg_to_geo(mesh, M_out);
+        ok = mmg_to_geo(mesh, M_out, opt.edge_attribute, opt.facet_attribute, opt.cell_attribute);
         GEO::Attribute<double> ls_out(M_out.vertices.attributes(), opt.ls_attribute);
         for(uint v = 0; v < M_out.vertices.nb(); ++v) {
             ls_out[v] = met->m[v+1];

@@ -112,8 +112,10 @@ namespace OGF {
         opt.noswap            = noswap;
         opt.nomove            = nomove;
         opt.metric_attribute  = metric_attribute;
+        opt.edge_attribute = edge_attribute;
+        opt.facet_attribute = facet_attribute;
         MeshGrob* Mo = MeshGrob::find_or_create(scene_graph(), name);
-        if (mmgs_tri_remesh(*mesh_grob(), *Mo, opt, edge_attribute, facet_attribute)) {
+        if (mmgs_tri_remesh(*mesh_grob(), *Mo, opt)) {
             Mo->update();
         } else {
             Mo->clear();
@@ -170,8 +172,11 @@ namespace OGF {
         opt.nomove            = nomove;
         opt.nosurf            = nosurf;
         opt.metric_attribute  = metric_attribute;
+        opt.edge_attribute = edge_attribute;
+        opt.facet_attribute = facet_attribute;
+        opt.cell_attribute = cell_attribute;
         MeshGrob* Mo = MeshGrob::find_or_create(scene_graph(), name);
-        if (mmg3d_tet_remesh(*mesh_grob(), *Mo, opt, edge_attribute, facet_attribute, cell_attribute)) {
+        if (mmg3d_tet_remesh(*mesh_grob(), *Mo, opt)) {
             Mo->update();
         } else {
             Mo->clear();

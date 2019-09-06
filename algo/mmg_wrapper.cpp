@@ -45,7 +45,9 @@
 #include <geogram/basic/attributes.h>
 #include <geogram/mesh/mesh.h>
 
+extern "C" {
 #include "mmg/libmmg.h"
+}
 
 namespace OGF {
     using namespace GEO;
@@ -91,8 +93,8 @@ namespace OGF {
     bool geo_to_mmg(const Mesh& M, MMG5_pMesh& mmg, MMG5_pSol& sol, bool volume_mesh = true) {
         printf("converting GEO::M to MMG5_pMesh .. \n");
         geo_assert(M.vertices.dimension() == 3);
-        if (M.facets.nb() > 0) geo_assert(M.facets.are_simplices());
-        if (M.cells.nb() > 0) geo_assert(M.cells.are_simplices());
+        // if (M.facets.nb() > 0) geo_assert(M.facets.are_simplices());
+        // if (M.cells.nb() > 0) geo_assert(M.cells.are_simplices());
 
         if (volume_mesh) {
             MMG3D_Init_mesh(MMG5_ARG_start, MMG5_ARG_ppMesh,&mmg,MMG5_ARG_ppMet,&sol, MMG5_ARG_end);

@@ -76,5 +76,5 @@ gomgen(mmgig)
 add_library(mmgig ${SOURCES})
 
 target_link_libraries(mmgig mesh scene_graph skin gom_gom gom)
-target_link_libraries(mmgig renderer image basic)
+target_link_libraries(mmgig renderer basic)
 target_link_libraries(mmgig ${MMG_LIBRARY})

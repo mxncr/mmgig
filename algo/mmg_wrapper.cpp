@@ -294,11 +294,12 @@ namespace OGF {
                 {
                   Logger::err("mmg_remesh") << opt.metric_attribute << " does not describes the upper "
                     << " triangular part of the anisotropic metric tensor, cancel" << std::endl;
-                   for(uint v = 0; v < M.vertices.nb(); ++v) {
-                       for(uint i = 0; i < 6; i++) {
-                         met->m[6*v+i+1] = h_local[6*v+i];
-                       }
-                   }
+                }
+                for(uint v = 0; v < M.vertices.nb(); ++v) {
+                      MMG3D_Set_tensorSol( met, h_local[6*v], h_local[6*v+1], h_local[6*v+2],
+                                                              h_local[6*v+3], h_local[6*v+4],
+                                                                              h_local[6*v+6],
+                                           int(v+1));
                 }
             }
             else {
@@ -336,9 +337,6 @@ namespace OGF {
 
         /* Set remeshing options */
         MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_angleDetection, opt.angle_value);
-        if (opt.enable_anisotropy) {
-            MMG3D_Set_solSize(mesh,met,MMG5_Vertex,0,MMG5_Tensor);
-        }
         if (opt.hsiz == 0. || opt.metric_attribute != "no_metric") {
             MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_hmin, opt.hmin);
             MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_hmax, opt.hmax);
@@ -367,11 +365,12 @@ namespace OGF {
                 {
                   Logger::err("mmg_remesh") << opt.metric_attribute << " does not describes the upper "
                     << " triangular part of the anisotropic metric tensor, cancel" << std::endl;
-                   for(uint v = 0; v < M.vertices.nb(); ++v) {
-                       for(uint i = 0; i < 6; i++) {
-                         met->m[6*v+i+1] = h_local[6*v+i];
-                       }
-                   }
+                }
+                for(uint v = 0; v < M.vertices.nb(); ++v) {
+                      MMG3D_Set_tensorSol( met, h_local[6*v], h_local[6*v+1], h_local[6*v+2],
+                                                              h_local[6*v+3], h_local[6*v+4],
+                                                                              h_local[6*v+5],
+                                           int(v+1));
                 }
             }
             else {

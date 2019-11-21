@@ -185,10 +185,8 @@ namespace OGF {
                 mmg->tria[t+1].ref = facet_attribute[t];
             }
         }
-        std::cout << "allo ???"<< std::endl;
         if (volume_mesh) {
             for (uint c = 0; c < (uint) mmg->ne; ++c) {
-                std::cout << mmg->tetra << std::endl;
                 mmg->tetra[c+1].v[0] = (int) M.cells.vertex(c,0) + 1;
                 mmg->tetra[c+1].v[1] = (int) M.cells.vertex(c,1) + 1;
                 mmg->tetra[c+1].v[2] = (int) M.cells.vertex(c,2) + 1;
@@ -269,9 +267,6 @@ namespace OGF {
 
         /* Set remeshing options */
         MMGS_Set_dparameter(mesh, met, MMGS_DPARAM_angleDetection, opt.angle_value);
-        if (opt.enable_anisotropy) {
-            MMGS_Set_solSize(mesh,met,MMG5_Vertex,0,MMG5_Tensor);
-        }
         if (opt.hsiz == 0. || opt.metric_attribute != "no_metric") {
             MMGS_Set_dparameter(mesh, met, MMGS_DPARAM_hmin, opt.hmin);
             MMGS_Set_dparameter(mesh, met, MMGS_DPARAM_hmax, opt.hmax);

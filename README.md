@@ -61,6 +61,4 @@ Tetrahedral remeshing with prescribed cell size :
 
 ### Todo / not supported
 
-- Wrapper for remeshing with anisotropic metric (one symmetric matrix per vertex)
-
 - Wrapper for 2D remeshing (*mmg2d*)

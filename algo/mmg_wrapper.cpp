@@ -115,6 +115,7 @@ namespace OGF {
     bool geo_to_mmg(const Mesh& M, MMG5_pMesh& mmg,
                     MMG5_pSol& sol,
                     bool volume_mesh = true,
+                    bool enable_anisotropy = false,
                     const std::string & edge_attribute_name = "no_attribute",
                     const std::string & facet_attribute_name = "no_attribute",
                     const std::string & cell_attribute_name = "no_attribute") {
@@ -203,10 +204,15 @@ namespace OGF {
             }
         }
 
-        if (volume_mesh && MMG3D_Set_solSize(mmg,sol,MMG5_Vertex,(int)M.vertices.nb(),MMG5_Scalar) != 1 ) {
+        MMG5_type metric_type = MMG5_Scalar;
+        if( enable_anisotropy )
+        {
+          metric_type = MMG5_Tensor;
+        }
+        if (volume_mesh && MMG3D_Set_solSize(mmg,sol,MMG5_Vertex,(int)M.vertices.nb(),metric_type) != 1 ) {
             printf("failed to MMG3D_Set_solSize\n");
             return false;
-        } else if (!volume_mesh && MMGS_Set_solSize(mmg,sol,MMG5_Vertex,(int)M.vertices.nb(),MMG5_Scalar) != 1 ) {
+        } else if (!volume_mesh && MMGS_Set_solSize(mmg,sol,MMG5_Vertex,(int)M.vertices.nb(),metric_type) != 1 ) {
             printf("failed to MMGS_Set_solSize\n");
             return false;
         }
@@ -252,7 +258,7 @@ namespace OGF {
                          const MmgOptions& opt) {
         MMG5_pMesh mesh = NULL;
         MMG5_pSol met = NULL;
-        bool ok = geo_to_mmg(M, mesh, met, false, opt.edge_attribute, opt.facet_attribute);
+        bool ok = geo_to_mmg(M, mesh, met, false, opt.enable_anisotropy, opt.edge_attribute, opt.facet_attribute);
         if (!ok) {
             Logger::err("mmgs_remesh") << "failed to convert mesh to MMG5_pMesh" << std::endl;
             mmgs_free(mesh, met);
@@ -261,9 +267,6 @@ namespace OGF {
 
         /* Set remeshing options */
         MMGS_Set_dparameter(mesh, met, MMGS_DPARAM_angleDetection, opt.angle_value);
-        if (opt.enable_anisotropy) {
-            MMGS_Set_solSize(mesh,met,MMG5_Vertex,0,MMG5_Tensor);
-        }
         if (opt.hsiz == 0. || opt.metric_attribute != "no_metric") {
             MMGS_Set_dparameter(mesh, met, MMGS_DPARAM_hmin, opt.hmin);
             MMGS_Set_dparameter(mesh, met, MMGS_DPARAM_hmax, opt.hmax);
@@ -283,8 +286,23 @@ namespace OGF {
                 return false;
             }
             GEO::Attribute<double> h_local(M.vertices.attributes(), opt.metric_attribute);
-            for(uint v = 0; v < M.vertices.nb(); ++v) {
-                met->m[v+1] = h_local[v];
+            if( opt.enable_anisotropy ) {
+                if( h_local.dimension() != 6 )
+                {
+                  Logger::err("mmg_remesh") << opt.metric_attribute << " does not describes the upper "
+                    << " triangular part of the anisotropic metric tensor, cancel" << std::endl;
+                }
+                for(uint v = 0; v < M.vertices.nb(); ++v) {
+                      MMG3D_Set_tensorSol( met, h_local[6*v], h_local[6*v+1], h_local[6*v+2],
+                                                              h_local[6*v+3], h_local[6*v+4],
+                                                                              h_local[6*v+5],
+                                           int(v+1));
+                }
+            }
+            else {
+                for(uint v = 0; v < M.vertices.nb(); ++v) {
+                    met->m[v+1] = h_local[v];
+                }
             }
         }
 
@@ -307,7 +325,7 @@ namespace OGF {
                           const MmgOptions& opt) {
         MMG5_pMesh mesh = NULL;
         MMG5_pSol met = NULL;
-        bool ok = geo_to_mmg(M, mesh, met, true, opt.edge_attribute, opt.facet_attribute, opt.cell_attribute);
+        bool ok = geo_to_mmg(M, mesh, met, true, opt.enable_anisotropy, opt.edge_attribute, opt.facet_attribute, opt.cell_attribute);
         if (!ok) {
             Logger::err("mmg3d_remesh") << "failed to convert mesh to MMG5_pMesh" << std::endl;
             mmg3d_free(mesh, met);
@@ -316,9 +334,6 @@ namespace OGF {
 
         /* Set remeshing options */
         MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_angleDetection, opt.angle_value);
-        if (opt.enable_anisotropy) {
-            MMG3D_Set_solSize(mesh,met,MMG5_Vertex,0,MMG5_Tensor);
-        }
         if (opt.hsiz == 0. || opt.metric_attribute != "no_metric") {
             MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_hmin, opt.hmin);
             MMG3D_Set_dparameter(mesh, met, MMG3D_DPARAM_hmax, opt.hmax);
@@ -342,8 +357,23 @@ namespace OGF {
                 return false;
             }
             GEO::Attribute<double> h_local(M.vertices.attributes(), opt.metric_attribute);
-            for(uint v = 0; v < M.vertices.nb(); ++v) {
-                met->m[v+1] = h_local[v];
+            if( opt.enable_anisotropy ) {
+                if( h_local.dimension() != 6 )
+                {
+                  Logger::err("mmg_remesh") << opt.metric_attribute << " does not describes the upper "
+                    << " triangular part of the anisotropic metric tensor, cancel" << std::endl;
+                }
+                for(uint v = 0; v < M.vertices.nb(); ++v) {
+                      MMG3D_Set_tensorSol( met, h_local[6*v], h_local[6*v+1], h_local[6*v+2],
+                                                              h_local[6*v+3], h_local[6*v+4],
+                                                                              h_local[6*v+5],
+                                           int(v+1));
+                }
+            }
+            else {
+                for(uint v = 0; v < M.vertices.nb(); ++v) {
+                    met->m[v+1] = h_local[v];
+                }
             }
         }
 
@@ -371,7 +401,7 @@ namespace OGF {
 
         MMG5_pMesh mesh = NULL;
         MMG5_pSol met = NULL;
-        bool ok = geo_to_mmg(M, mesh, met, true, opt.edge_attribute, opt.facet_attribute, opt.cell_attribute);
+        bool ok = geo_to_mmg(M, mesh, met, true, opt.enable_anisotropy, opt.edge_attribute, opt.facet_attribute, opt.cell_attribute);
         if (!ok) {
             Logger::err("mmg3d_remesh") << "failed to convert mesh to MMG5_pMesh" << std::endl;
             mmg3d_free(mesh, met);
